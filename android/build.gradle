@@ -1,0 +1,28 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.3.0' // Gradle 8.3 compatibility
+        classpath 'com.google.gms:google-services:4.4.2' // Firebase plugin
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Consolidate build directories
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+
+// Task for cleaning the build directory
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

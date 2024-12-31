@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "530150161152",
+    "project_id": "seaweedfyp",
+    "storage_bucket": "seaweedfyp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:530150161152:android:00e7e0ddae8fa65f0051e5",
+        "android_client_info": {
+          "package_name": "com.example.flutter_seaweedFYP"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmp2JUx5pmA2stAg3BNXuTvqRrOF6P_kI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
