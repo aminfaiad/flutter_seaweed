@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async'; // Required for TimeoutException
 
 class ForgetPasswordPage extends StatefulWidget {
   @override
@@ -10,7 +13,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  void _resetPassword() async {
+  Future<void> _resetPassword() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -25,34 +28,66 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
       return;
     }
 
-    // Simulate API call
     try {
-      await Future.delayed(Duration(seconds: 2)); // Replace with actual API call
+      // Replace with your actual API endpoint
+      final Uri url = Uri.parse("https://smartseaweed.site/Real/forgot_mobile.php");
+
+      // Send POST request with a timeout of 20 seconds
+      final response = await http
+          .post(
+            url,
+            body: {'email': email},
+          )
+          .timeout(Duration(seconds: 20)); // Add timeout here
+      
+
+      if (response.statusCode == 200) {
+        // Decode the response body
+        final responseBody = response.body;
+        if (responseBody.contains("Password reset link has been sent")) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          // Display success message
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text("Success"),
+              content: Text(
+                  "Password reset link has been sent to your email address."),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("OK"),
+                ),
+              ],
+            ),
+          );
+        } else {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = "No account found with that email.";
+          });
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Failed to connect to the server.";
+        });
+      }
+    } on TimeoutException catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = null;
+        _errorMessage = "Request timed out. Please try again.";
       });
-
-      // Display success message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Success"),
-          content: Text(
-              "A recovery email has been sent to your registered email address."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        ),
-      );
+      print("Timeout Error: $e");
     } catch (error) {
       setState(() {
         _isLoading = false;
-        _errorMessage = "Failed to send recovery email. Please try again.";
+        _errorMessage = "An error occurred: $error";
       });
+      print("Error: $error");
     }
   }
 
@@ -110,7 +145,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _resetPassword,
+                    onPressed: _isLoading ? null : _resetPassword,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(

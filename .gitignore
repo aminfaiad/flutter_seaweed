@@ -49,3 +49,4 @@ macos/
 linux/
 windows/
 web/
+*.lock

@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import 'signup_page.dart';
 import 'dashboard_page.dart';
 import 'forgetpw_page.dart';
@@ -11,57 +13,71 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  late FirebaseMessaging _messaging;
-  String _fcmToken = '';
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _setupFirebaseMessaging();
-  }
+  Future<void> _login() async {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
 
-  void _setupFirebaseMessaging() {
-    _messaging = FirebaseMessaging.instance;
+    if (email.isEmpty || password.isEmpty) {
+      _showMessageDialog("Error", "Please enter both email and password.");
+      return;
+    }
 
-    // Request notification permissions
-    _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    // Get the FCM token
-    _messaging.getToken().then((token) {
-      setState(() {
-        _fcmToken = token ?? 'Failed to get FCM token';
-      });
-      print("FCM Token: $_fcmToken");
-      // You can send the token to your backend server if needed
+    setState(() {
+      _isLoading = true;
     });
 
-    // Listen for foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        print("Message Title: ${message.notification!.title}");
-        print("Message Body: ${message.notification!.body}");
-        _showNotificationDialog(
-          message.notification!.title ?? 'Notification',
-          message.notification!.body ?? 'No message body.',
-        );
+    try {
+      // Replace with your actual PHP API endpoint
+      final Uri url = Uri.parse("https://smartseaweed.site/Real/login_mobile.php");
+
+      final response = await http.post(
+        url,
+        body: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        if (responseData['status'] == 'success') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  DashboardPage(username: responseData['name']), // Use returned username
+            ),
+          );
+        } else {
+          _showMessageDialog("Error", responseData['error'] ?? "Login failed.");
+        }
+      } else {
+        _showMessageDialog("Error", "Failed to connect to the server.");
       }
-    });
+    } catch (e) {
+      _showMessageDialog("Error", "An error occurred: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  void _showNotificationDialog(String title, String body) {
+  void _showMessageDialog(String title, String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
-        content: Text(body),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('OK'),
+            child: Text("OK"),
           ),
         ],
       ),
@@ -99,6 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 20),
                 // Email TextField
                 TextField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -113,6 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 15),
                 // Password TextField
                 TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     filled: true,
@@ -124,40 +142,6 @@ class _LoginPageState extends State<LoginPage> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                ),
-                SizedBox(height: 10),
-                // Remember Me and Forgot Password
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: false,
-                          onChanged: (value) {},
-                          activeColor: Colors.white,
-                        ),
-                        Text(
-                          'Remember me',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ForgetPasswordPage(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Forgot password',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
                 ),
                 SizedBox(height: 20),
                 // Sign In Button
@@ -171,25 +155,37 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 15),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              DashboardPage(username: 'Rebecca'),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'SIGN IN',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onPressed: _isLoading ? null : _login,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.green)
+                        : Text(
+                            'SIGN IN',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 SizedBox(height: 20),
+                // Forgot Password
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgetPasswordPage()),
+                        );
+                      },
+                      child: Text(
+                        'Forgot password',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
                 // Sign Up Redirect
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -212,13 +208,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                // Display FCM Token
-                if (_fcmToken.isNotEmpty)
-                  Text(
-                    'FCM Token: $_fcmToken',
-                    style: TextStyle(color: Colors.white, fontSize: 10),
-                  ),
               ],
             ),
           ),
