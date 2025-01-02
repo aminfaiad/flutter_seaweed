@@ -1,8 +1,10 @@
 import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'login_page.dart';
 import 'profile_page.dart';
 import 'changepw_page.dart';
@@ -15,8 +17,12 @@ import 'camera_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final String username;
-
-  DashboardPage({required this.username});
+  final String mobile_token;
+  
+  DashboardPage({required this.username,required this.mobile_token
+   
+  });
+  
 
   @override
   _DashboardPageState createState() => _DashboardPageState();
@@ -27,7 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
   String phValue = 'Loading...';
   String lightIntensity = 'Loading...';
   String temperature = 'Loading...';
-
+  
   Timer? _timer;
 
   @override
@@ -35,6 +41,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     fetchDashboardData();
     _startAutoRefresh();
+    sendPostRequest(fcmToken:fcmToken ,mobileToken: widget.mobile_token);
   }
 
   @override
@@ -49,6 +56,43 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
+  final String url = 'https://smartseaweed.site/Real/fcm_token_api.php';
+
+  Future<String> getDeviceType() async {
+    if (Platform.isAndroid) {
+      return 'Android';
+    } else if (Platform.isIOS) {
+      return 'iOS';
+    } else {
+      return 'Unknown';
+    }
+  }
+
+  Future<void> sendPostRequest({
+    required String mobileToken,
+    required String? fcmToken,
+  }) async {
+    try {
+      final deviceType = await getDeviceType();
+      final response = await http.post(
+        Uri.parse(url),
+        body: {
+          'mobile_token': mobileToken,
+          'fcm_token': fcmToken,
+          'device_type': deviceType,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Request successful: ${response.body}');
+      } else {
+        print('Failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
   Future<void> fetchDashboardData() async {
     final url = Uri.parse('https://smartseaweed.site/Real/get_data.php');
     try {
@@ -60,8 +104,8 @@ class _DashboardPageState extends State<DashboardPage> {
         },
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      //print('Response status: ${response.statusCode}');
+      //print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);

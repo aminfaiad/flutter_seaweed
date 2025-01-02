@@ -16,7 +16,7 @@ class TemperaturePage extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => DashboardPage(username: 'User'), // Replace 'User' with actual username
+                builder: (context) => DashboardPage(username: 'User', mobile_token: "test",), // Replace 'User' with actual username
               ),
             );
           },

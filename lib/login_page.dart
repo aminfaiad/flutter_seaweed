@@ -50,7 +50,9 @@ class _LoginPageState extends State<LoginPage> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  DashboardPage(username: responseData['name']), // Use returned username
+                  DashboardPage(username: responseData['name'],
+                  mobile_token: responseData['mobile_token']), // Use returned username
+                  
             ),
           );
         } else {
@@ -215,13 +217,4 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-}
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-
-  runApp(MaterialApp(
-    home: LoginPage(),
-  ));
 }

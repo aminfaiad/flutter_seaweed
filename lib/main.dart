@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'login_page.dart'; // Replace with the correct path to your LoginPage file
+String? fcmToken;
 
 // Background message handler
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -18,9 +19,12 @@ void main() async {
   print("TEST1");
   // Set up the background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  fcmToken = await FirebaseMessaging.instance.getToken();
+  print(fcmToken);
 
   runApp(MyApp());
-  print("TEST2");
+
+  
 }
 
 class MyApp extends StatelessWidget {
