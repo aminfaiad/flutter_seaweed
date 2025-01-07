@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'signup_page.dart';
 import 'dashboard_page.dart';
 import 'forgetpw_page.dart';
+import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -50,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  DashboardPage(username: responseData['name'],
+                  FarmDashboardPage(username: responseData['name'],
                   mobile_token: responseData['mobile_token']), // Use returned username
                   
             ),
