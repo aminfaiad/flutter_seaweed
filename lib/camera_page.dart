@@ -1,151 +1,128 @@
 import 'package:flutter/material.dart';
-import 'signup_page.dart';
-   
-class CameraPage extends StatelessWidget {
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+import 'dashboard_page.dart';
+
+class CameraPage extends StatefulWidget {
+  final String username;
+  final String mobile_token;
+
+  CameraPage({required this.username, required this.mobile_token});
+
+  final String farm_token = "8a2dcd67646081ef53ed4b21958c57f4";
+
+  @override
+  _CameraPageState createState() => _CameraPageState();
+}
+
+class _CameraPageState extends State<CameraPage> {
+  String? _imageUrl;
+  Timer? _imageTimer;
+  Widget? _currentImageWidget;
+  String? _errorMessage;
+  bool _isFetching = false; // Prevent concurrent API calls
+
+  @override
+  void initState() {
+    super.initState();
+    _startFetchingImages();
+  }
+
+  @override
+  void dispose() {
+    _imageTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startFetchingImages() {
+    _imageTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      if (!_isFetching) {
+        _fetchImageUrl();
+      }
+    });
+  }
+
+  Future<void> _fetchImageUrl() async {
+    setState(() {
+      _isFetching = true;
+    });
+
+    try {
+      final url = Uri.parse('https://smartseaweed.site/Real/get_img.php');
+      final response = await http.post(
+        url,
+        body: {'farm_token': widget.farm_token},
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['status'] == 'success') {
+          final newImageUrl = 'https://smartseaweed.site/Real/' + jsonResponse['image_path'] ;
+
+          if (newImageUrl != _imageUrl) {
+            setState(() {
+              _imageUrl = newImageUrl;
+              _currentImageWidget = Image.network(_imageUrl!);
+              _errorMessage = null;
+            });
+          }
+        } else {
+          throw Exception(jsonResponse['message'] ?? 'Unknown error');
+        }
+      } else {
+        throw Exception('Failed to fetch image URL');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to fetch image: $e';
+      });
+    } finally {
+      setState(() {
+        _isFetching = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[400],
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Seaweed Monitoring Apps',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Log in',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 20),
-                // Email TextField
-                TextField(
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    hintText: 'Email',
-                    prefixIcon: Icon(Icons.email, color: Colors.green),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 15),
-                // Password TextField
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock, color: Colors.green),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                // Remember Me and Forgot Password
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: false,
-                          onChanged: (value) {},
-                          activeColor: Colors.white,
-                        ),
-                        Text(
-                          'Remember me',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Handle forgot password
-                      },
-                      child: Text(
-                        'Forgot password',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                // Sign In Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    onPressed: () {
-                      // Handle login
-                    },
-                    child: Text(
-                      'SIGN IN',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                // Sign Up Redirect
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignUpPage()),
-                        );
-                      },
-                      child: Text(
-                        'Sign up',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+      appBar: AppBar(
+        title: Text(
+          'Camera Feed',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    DashboardPage(username: widget.username, mobile_token: widget.mobile_token),
+              ),
+            );
+          },
         ),
       ),
+      body: _buildImageDisplay(),
     );
   }
-}
 
-void main() {
-  runApp(MaterialApp(
-    home: CameraPage(),
-  ));
+  Widget _buildImageDisplay() {
+    if (_errorMessage != null) {
+      return Center(
+        child: Text(
+          _errorMessage!,
+          style: TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    return Center(
+      child: _currentImageWidget ?? CircularProgressIndicator(),
+    );
+  }
 }

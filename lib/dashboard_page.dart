@@ -121,7 +121,7 @@ Future<void> requestNotificationPermission() async {
       final response = await http.post(
         url,
         body: {
-          'farm_token': 'test',
+          'farm_token': '8a2dcd67646081ef53ed4b21958c57f4',
           'farm_range': 'current',
         },
       );
@@ -200,7 +200,7 @@ Future<void> requestNotificationPermission() async {
                   _buildDashboardBox(context, 'Light', lightIntensity, Colors.yellow, LightPage()),
                   _buildDashboardBox(context, 'Temperature', temperature, Colors.red, TemperaturePage()),
                   _buildDashboardBox(context, 'Water Level', '50 cm', Colors.cyan, WaterLevelPage()),
-                  _buildDashboardBox(context, 'Cameras', 'Active', Colors.orange, CameraPage()),
+                  _buildDashboardBox(context, 'Cameras', 'Active', Colors.orange, CameraPage(username: widget.username, mobile_token: widget.mobile_token,)),
                 ],
               ),
             ),
