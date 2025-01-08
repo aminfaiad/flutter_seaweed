@@ -58,12 +58,12 @@ class _CameraPageState extends State<CameraPage> {
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['status'] == 'success') {
-          final newImageUrl = 'https://smartseaweed.site/Real/' + jsonResponse['image_path'] ;
+          final newImageUrl = 'https://smartseaweed.site/Real/' + jsonResponse['image_path'];
 
           if (newImageUrl != _imageUrl) {
             setState(() {
               _imageUrl = newImageUrl;
-              _currentImageWidget = Image.network(_imageUrl!);
+              _currentImageWidget = _buildZoomableImage(_imageUrl!);
               _errorMessage = null;
             });
           }
@@ -82,6 +82,14 @@ class _CameraPageState extends State<CameraPage> {
         _isFetching = false;
       });
     }
+  }
+
+  Widget _buildZoomableImage(String imageUrl) {
+    return InteractiveViewer(
+      minScale: 1.0,
+      maxScale: 4.0,
+      child: Image.network(imageUrl),
+    );
   }
 
   @override

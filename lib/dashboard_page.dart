@@ -9,6 +9,7 @@ import 'login_page.dart';
 import 'profile_page.dart';
 import 'changepw_page.dart';
 import 'salinity_page.dart';
+import 'home_page.dart';
 import 'ph_page.dart';
 import 'light_page.dart';
 import 'temperature_page.dart';
@@ -18,11 +19,8 @@ import 'camera_page.dart';
 class DashboardPage extends StatefulWidget {
   final String username;
   final String mobile_token;
-  
-  DashboardPage({required this.username,required this.mobile_token
-   
-  });
-  
+
+  DashboardPage({required this.username, required this.mobile_token});
 
   @override
   _DashboardPageState createState() => _DashboardPageState();
@@ -33,7 +31,7 @@ class _DashboardPageState extends State<DashboardPage> {
   String phValue = 'Loading...';
   String lightIntensity = 'Loading...';
   String temperature = 'Loading...';
-  
+
   Timer? _timer;
 
   @override
@@ -41,14 +39,13 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     fetchDashboardData();
     _startAutoRefresh();
-    sendPostRequest(fcmToken:fcmToken ,mobileToken: widget.mobile_token);
-    requestNotificationPermission(); // Request notification permissions here
-    
+    sendPostRequest(fcmToken: fcmToken, mobileToken: widget.mobile_token);
+    requestNotificationPermission();
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancel the timer when the page is disposed
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -70,26 +67,21 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-Future<void> requestNotificationPermission() async {
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
+  Future<void> requestNotificationPermission() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print('User granted permission');
-  } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-    print('User granted provisional permission');
-  } else {
-    print('User declined or has not accepted permission');
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else {
+      print('User declined permission');
+    }
   }
-}
+
   Future<void> sendPostRequest({
     required String mobileToken,
     required String? fcmToken,
@@ -126,9 +118,6 @@ Future<void> requestNotificationPermission() async {
         },
       );
 
-      //print('Response status: ${response.statusCode}');
-      //print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
@@ -140,22 +129,18 @@ Future<void> requestNotificationPermission() async {
             lightIntensity = '${data['light_intensity']} lux';
             temperature = '${data['temperature']}°C';
           });
-        } else if (responseData['status'] == 'error' &&
-            responseData['message'] == 'No recent data found.') {
+        } else {
           setState(() {
             salinity = 'No Data';
             phValue = 'No Data';
             lightIntensity = 'No Data';
             temperature = 'No Data';
           });
-        } else {
-          throw Exception('Unexpected API response');
         }
       } else {
         throw Exception('Failed to connect to the server');
       }
     } catch (e) {
-      print('Error: $e');
       setState(() {
         salinity = 'Error';
         phValue = 'Error';
@@ -172,7 +157,16 @@ Future<void> requestNotificationPermission() async {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => FarmDashboardPage(username: 'user', mobile_token: 'test',)),
+              (route) => false,
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -181,7 +175,10 @@ Future<void> requestNotificationPermission() async {
           children: [
             Text(
               'Hi, ${widget.username}',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
@@ -195,12 +192,24 @@ Future<void> requestNotificationPermission() async {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  _buildDashboardBox(context, 'Salinity', salinity, Colors.blue, SalinityPage()),
-                  _buildDashboardBox(context, 'pH', phValue, Colors.green, PhPage()),
-                  _buildDashboardBox(context, 'Light', lightIntensity, Colors.yellow, LightPage()),
-                  _buildDashboardBox(context, 'Temperature', temperature, Colors.red, TemperaturePage()),
-                  _buildDashboardBox(context, 'Water Level', '50 cm', Colors.cyan, WaterLevelPage()),
-                  _buildDashboardBox(context, 'Cameras', 'Active', Colors.orange, CameraPage(username: widget.username, mobile_token: widget.mobile_token,)),
+                  _buildDashboardBox(
+                      context, 'Salinity', salinity, Colors.blue, SalinityPage()),
+                  _buildDashboardBox(
+                      context, 'pH', phValue, Colors.green, PhPage()),
+                  _buildDashboardBox(context, 'Light', lightIntensity,
+                      Colors.yellow, LightPage()),
+                  _buildDashboardBox(context, 'Temperature', temperature,
+                      Colors.red, TemperaturePage()),
+                  _buildDashboardBox(context, 'Water Level', '50 cm',
+                      Colors.cyan, WaterLevelPage()),
+                  _buildDashboardBox(
+                      context,
+                      'Cameras',
+                      'Active',
+                      Colors.orange,
+                      CameraPage(
+                          username: widget.username,
+                          mobile_token: widget.mobile_token)),
                 ],
               ),
             ),
@@ -210,12 +219,15 @@ Future<void> requestNotificationPermission() async {
     );
   }
 
-  Widget _buildDashboardBox(BuildContext context, String title, String value, Color color, Widget page) {
+  Widget _buildDashboardBox(
+      BuildContext context, String title, String value, Color color, Widget page) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => page),
+          MaterialPageRoute(
+            builder: (context) => page,
+          ),
         );
       },
       child: Container(
@@ -228,7 +240,8 @@ Future<void> requestNotificationPermission() async {
           children: [
             Text(
               title,
-              style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: color, fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(

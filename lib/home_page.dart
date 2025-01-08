@@ -180,7 +180,7 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
               } else if (value == 'change_password') {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ChangePasswordPage()),
+                  MaterialPageRoute(builder: (context) => ChangePasswordPage(username: "SOPIIIIIIIIIAAAAAAAAAAAAA",)),
                 );
               } else if (value == 'logout') {
                 Navigator.pushAndRemoveUntil(
