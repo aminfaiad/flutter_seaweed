@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dashboard_page.dart';
+import 'profile_page.dart';
+import 'changepw_page.dart';
+import 'login_page.dart';
+
 
 class FarmDashboardPage extends StatefulWidget {
   final String username;
@@ -31,40 +35,28 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
     }
   }
 
-  void _showPopupMenu(BuildContext context) {
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(100, 80, 20, 100),
-      items: [
-        PopupMenuItem(
-          value: 'profile',
-          child: Text('Profile'),
-        ),
-        PopupMenuItem(
-          value: 'change_password',
-          child: Text('Change Password'),
-        ),
-        PopupMenuItem(
-          value: 'logout',
-          child: Text('Logout'),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'profile') {
-        // Navigate to Profile Page
-      } else if (value == 'change_password') {
-        // Navigate to Change Password Page
-      } else if (value == 'logout') {
-        // Perform logout logic
-      }
-    });
-  }
-
+  
   void _goToFarmDashboard() {
-    if (selectedFarm != null) {
-      // Navigate to the farm-specific dashboard
-    }
+  if (selectedFarm != null) {
+    // Navigate to the farm-specific dashboard
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DashboardPage(
+          username: 'YourUsername', // Replace with the actual username value
+          mobile_token: 'YourMobileToken', // Replace with the actual token value
+        ),
+      ),
+    );
+  } else {
+    // Handle the case where no farm is selected
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Please select a farm to proceed.'),
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -162,10 +154,42 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () => _showPopupMenu(context),
+       actions: [
+          PopupMenuButton(
+            icon: Icon(Icons.more_vert, color: const Color.fromARGB(255, 0, 0, 0)),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: Text("Profile"),
+                value: 'profile',
+              ),
+              PopupMenuItem(
+                child: Text("Change Password"),
+                value: 'change_password',
+              ),
+              PopupMenuItem(
+                child: Text("Logout"),
+                value: 'logout',
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'profile') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+              } else if (value == 'change_password') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChangePasswordPage()),
+                );
+              } else if (value == 'logout') {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  (route) => false,
+                );
+              }
+            },
           ),
         ],
       ),

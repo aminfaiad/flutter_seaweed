@@ -172,44 +172,7 @@ Future<void> requestNotificationPermission() async {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        actions: [
-          PopupMenuButton(
-            icon: Icon(Icons.more_vert, color: Colors.white),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                child: Text("Profile"),
-                value: 'profile',
-              ),
-              PopupMenuItem(
-                child: Text("Change Password"),
-                value: 'change_password',
-              ),
-              PopupMenuItem(
-                child: Text("Logout"),
-                value: 'logout',
-              ),
-            ],
-            onSelected: (value) {
-              if (value == 'profile') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()),
-                );
-              } else if (value == 'change_password') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChangePasswordPage()),
-                );
-              } else if (value == 'logout') {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-        ],
+        
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
