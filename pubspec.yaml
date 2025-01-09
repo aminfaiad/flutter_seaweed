@@ -40,6 +40,7 @@ dependencies:
   firebase_messaging: ^15.1.6
   firebase_core: ^3.9.0
   shared_preferences: ^2.3.5
+  webview_flutter: ^4.10.0
 dependency_overrides:
   fl_chart: 0.36.0
   

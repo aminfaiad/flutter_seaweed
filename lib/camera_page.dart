@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
-import 'dashboard_page.dart';
 
 class CameraPage extends StatefulWidget {
-  final String username;
-  final String mobile_token;
+  final String farm_token;
 
-  CameraPage({required this.username, required this.mobile_token});
+  CameraPage({required this.farm_token});
 
-  final String farm_token = "8a2dcd67646081ef53ed4b21958c57f4";
 
   @override
   _CameraPageState createState() => _CameraPageState();
@@ -36,7 +33,7 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   void _startFetchingImages() {
-    _imageTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+    _imageTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (!_isFetching) {
         _fetchImageUrl();
       }

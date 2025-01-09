@@ -191,23 +191,21 @@ class _DashboardPageState extends State<DashboardPage> {
                 mainAxisSpacing: 16,
                 children: [
                   _buildDashboardBox(
-                      context, 'Salinity', salinity, Colors.blue, SalinityPage()),
+                      context, 'Salinity', salinity, Colors.blue, SalinityPage(farm_token: widget.farm_token, type:"salinity")),
                   _buildDashboardBox(
-                      context, 'pH', phValue, Colors.green, PhPage()),
+                      context, 'pH', phValue, Colors.green, PhPage(farm_token: widget.farm_token, type:"ph_value")),
                   _buildDashboardBox(context, 'Light', lightIntensity,
-                      Colors.yellow, LightPage()),
+                      Colors.yellow, LightPage(farm_token: widget.farm_token, type:"light_intensity")),
                   _buildDashboardBox(context, 'Temperature', temperature,
-                      Colors.red, TemperaturePage()),
+                      Colors.red, TemperaturePage(farm_token: widget.farm_token, type:"temperature")),
                   _buildDashboardBox(context, 'Water Level', '50 cm',
-                      Colors.cyan, WaterLevelPage()),
+                      Colors.cyan, WaterLevelPage(farm_token: widget.farm_token, type:"water_level")),
                   _buildDashboardBox(
                       context,
                       'Cameras',
                       'Active',
                       Colors.orange,
-                      CameraPage(
-                          username: widget.username,
-                          mobile_token: widget.mobile_token)),
+                      CameraPage( farm_token: widget.farm_token)),
                 ],
               ),
             ),

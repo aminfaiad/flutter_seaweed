@@ -131,14 +131,17 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Seaweed Monitoring Apps',
+                Center(
+                  child: Text(
+                  'Sea Smart',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
+                ) ,
+                )
+                ,
                 SizedBox(height: 20),
                 Text(
                   'Log in',
