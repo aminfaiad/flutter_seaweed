@@ -4,9 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ChangePasswordPage extends StatefulWidget {
-  final String username; // Pass username if needed for API authentication
+  final String mobileToken; // Removed username, only mobileToken is required
 
-  ChangePasswordPage({required this.username});
+  ChangePasswordPage({required this.mobileToken});
 
   @override
   _ChangePasswordPageState createState() => _ChangePasswordPageState();
@@ -15,8 +15,7 @@ class ChangePasswordPage extends StatefulWidget {
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -30,10 +29,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final newPassword = _newPasswordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    // Validate inputs
-    if (oldPassword.isEmpty ||
-        newPassword.isEmpty ||
-        confirmPassword.isEmpty) {
+    if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
       setState(() {
         _isLoading = false;
         _errorMessage = "All fields are required.";
@@ -50,18 +46,16 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     }
 
     try {
-      // Replace with your actual API endpoint
-      final Uri url = Uri.parse("https://smartseaweed.site/Real/change_password.php");
+      final Uri url = Uri.parse("https://smartseaweed.site/Real/change_password_mobile.php");
+
       final response = await http.post(
         url,
         body: {
-          'username': widget.username, // Assuming username is passed for authentication
+          'mobile_token': widget.mobileToken, // Pass mobile token from constructor
           'old_password': oldPassword,
           'new_password': newPassword,
         },
       );
-
-      print(response.body);
 
       if (response.statusCode == 200) {
         final responseBody = json.decode(response.body);
@@ -71,37 +65,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             _isLoading = false;
           });
 
-          // Display success message and redirect
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
               title: Text("Success"),
-              content: Text("Password has been successfully changed."),
+              content: Text(responseBody['message']),
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FarmDashboardPage(
-                          username: widget.username,
-                          mobile_token: 'UHHYUYUHUY',
-                        ),
-                      ),
-                      (route) => false,
-                    );
+                    Navigator.pop(context); // Close the dialog
+                    Navigator.pop(context); // Navigate back to the previous screen
                   },
                   child: Text("OK"),
                 ),
               ],
             ),
           );
-        } else if (responseBody['status'] == 'error' &&
-            responseBody['message'] == 'Old password incorrect') {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = "Old password is incorrect.";
-          });
         } else {
           setState(() {
             _isLoading = false;
@@ -132,16 +111,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FarmDashboardPage(
-                  username: widget.username,
-                  mobile_token: "SIIIIIIIIII",
-                ),
-              ),
-              (route) => false,
-            );
+            Navigator.pop(context); // Navigate back to the previous screen
           },
         ),
       ),
@@ -153,18 +123,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Dummy Image
-                Center(
-                  child: Container(
-                    height: 100,
-                    width: 100,
-                    color: Colors.grey[300],
-                    child: Center(
-                      child: Text("Image Placeholder"),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
                 Text(
                   'Change Password',
                   style: TextStyle(

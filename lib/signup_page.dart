@@ -1,7 +1,83 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'login_page.dart';
 
 class SignUpPage extends StatelessWidget {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
+  Future<void> register(BuildContext context) async {
+    final String name = nameController.text.trim();
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
+    final String confirmPassword = confirmPasswordController.text.trim();
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Passwords do not match!")),
+      );
+      return;
+    }
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("All fields are required!")),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://smartseaweed.site/Real/register_mobile.php'),
+        body: {
+          'name': name,
+          'email': email,
+          'password': password,
+        },
+      );
+
+      final Map<String, dynamic> responseData = json.decode(response.body);
+
+      if (responseData['status'] == 'success') {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Registration Successful"),
+              content: Text("You have successfully registered. Please log in."),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                    Navigator.pop(context);
+                  },
+                  child: Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to register: ${responseData['message']}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("An error occurred: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,8 +98,8 @@ class SignUpPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20),
-                // Username TextField
                 TextField(
+                  controller: nameController,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -36,8 +112,8 @@ class SignUpPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 15),
-                // Email TextField
                 TextField(
+                  controller: emailController,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -50,8 +126,8 @@ class SignUpPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 15),
-                // Password TextField
                 TextField(
+                  controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     filled: true,
@@ -65,8 +141,8 @@ class SignUpPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 15),
-                // Confirm Password TextField
                 TextField(
+                  controller: confirmPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     filled: true,
@@ -80,7 +156,6 @@ class SignUpPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20),
-                // Sign Up Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -91,9 +166,7 @@ class SignUpPage extends StatelessWidget {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 15),
                     ),
-                    onPressed: () {
-                      // Handle sign up
-                    },
+                    onPressed: () => register(context),
                     child: Text(
                       'SIGN UP',
                       style: TextStyle(
@@ -104,7 +177,6 @@ class SignUpPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20),
-                // Login Redirect
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -114,10 +186,7 @@ class SignUpPage extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginPage()),
-                        );
+                        Navigator.pop(context);
                       },
                       child: Text(
                         'Log in',
