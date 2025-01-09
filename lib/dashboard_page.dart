@@ -19,8 +19,9 @@ import 'camera_page.dart';
 class DashboardPage extends StatefulWidget {
   final String username;
   final String mobile_token;
+  final String farm_token;
 
-  DashboardPage({required this.username, required this.mobile_token});
+  DashboardPage({required this.username, required this.mobile_token , required this.farm_token});
 
   @override
   _DashboardPageState createState() => _DashboardPageState();
@@ -113,7 +114,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final response = await http.post(
         url,
         body: {
-          'farm_token': '8a2dcd67646081ef53ed4b21958c57f4',
+          'farm_token': widget.farm_token,
           'farm_range': 'current',
         },
       );

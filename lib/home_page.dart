@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_application_2/main.dart';
 import 'dashboard_page.dart';
 import 'profile_page.dart';
 import 'changepw_page.dart';
@@ -110,34 +111,75 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
   }
 
   Future<void> _logout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Clear session data
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-      (route) => false,
-    );
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  // Get the mobile_token
+  final String? mobileToken = widget.mobile_token;
+
+  if (mobileToken != null) {
+    try {
+      // Prepare the request body as a map of key-value pairs
+      final Map<String, String> requestBody = {
+        'mobile_token': mobileToken,
+      };
+
+      // Add fcm_token to the request body only if it's not null
+      if (fcmToken != null) {
+        requestBody['fcm_token'] = fcmToken!;
+      }
+
+      // Make a POST request to the logout endpoint
+      final response = await http.post(
+        Uri.parse('https://smartseaweed.site/Real/logout_mobile.php'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}, // Form-encoded data
+        body: requestBody, // Directly pass the map (no need for JSON encoding)
+      );
+
+      if (response.statusCode == 200) {
+        print('Logout request successful: ${response.body}');
+      } else {
+        print('Logout request failed: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error during logout request: $e');
+    }
+  } else {
+    print('Mobile token is null.');
   }
 
+  // Clear session data
+  await prefs.clear();
+
+  // Navigate to LoginPage
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (context) => LoginPage()),
+    (route) => false,
+  );
+}
+
+
+
   void _goToFarmDashboard() {
-    if (selectedFarm != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DashboardPage(
-            username: widget.username,
-            mobile_token: widget.mobile_token,
-          ),
+  if (selectedFarm != null) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DashboardPage(
+          username: widget.username,
+          mobile_token: widget.mobile_token,
+          farm_token: selectedFarm!, // Pass the selected farm token
         ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please select a farm to proceed.'),
-        ),
-      );
-    }
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Please select a farm to proceed.'),
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
         body: {
           'email': email,
           'password': password,
+          'fcm_token' : fcmToken,
         },
       );
 
