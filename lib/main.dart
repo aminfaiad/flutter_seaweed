@@ -23,7 +23,9 @@ Future<Map<String, String>> getUserDetails() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String username = prefs.getString('username') ?? 'User';
   String mobileToken = prefs.getString('mobile_token') ?? '';
-  return {'username': username, 'mobile_token': mobileToken};
+  String email = prefs.getString('email') ?? '';
+
+  return {'username': username, 'mobile_token': mobileToken, 'email' :email};
 }
 
 void main() async {
@@ -60,6 +62,7 @@ class MyApp extends StatelessWidget {
           ? FarmDashboardPage(
               username: userDetails['username']!,
               mobile_token: userDetails['mobile_token']!,
+              email: userDetails['email']!,
             )
           : LoginPage(), // Redirect to login if not logged in
     );

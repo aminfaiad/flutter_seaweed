@@ -11,8 +11,10 @@ import 'login_page.dart';
 class FarmDashboardPage extends StatefulWidget {
   final String username;
   final String mobile_token;
+  final String email;
 
-  FarmDashboardPage({required this.username, required this.mobile_token});
+
+  FarmDashboardPage({required this.username, required this.mobile_token,required this.email});
 
   @override
   _FarmDashboardPageState createState() => _FarmDashboardPageState();
@@ -305,7 +307,7 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProfilePage(),
+                    builder: (context) => ProfilePage(username:widget.username, email:widget.email , mobile_token:widget.mobile_token),
                   ),
                 );
               } else if (value == 'change_password') {

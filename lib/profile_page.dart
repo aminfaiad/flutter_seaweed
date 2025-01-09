@@ -1,22 +1,69 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget {
+  final String username;
+  final String email;
+  final String mobile_token;
+
+  ProfilePage({required this.username, required this.email, required this.mobile_token});
+
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final TextEditingController _usernameController = TextEditingController();
+  late TextEditingController _usernameController;
   bool _isEditing = false;
 
-  // Sample data
-  final String _email = "example@email.com";
-  final List<String> _listedFarms = ["Farm1", "Farm2", "Farm3"];
+  List<String> _listedFarms = []; // To hold the farm names
+  bool _isLoadingFarms = true; // To indicate farm list loading state
+  String _error = ''; // To hold any error messages
 
   @override
   void initState() {
     super.initState();
-    _usernameController.text = "JohnDoe"; // Default username
+    _usernameController = TextEditingController(text: widget.username);
+    _fetchFarms(); // Fetch the farms on page load
+  }
+
+  Future<void> _fetchFarms() async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://smartseaweed.site/Real/get_farm_mobile.php'),
+        body: {'mobile_token': widget.mobile_token},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['error'] != null) {
+          setState(() {
+            _error = data['error'];
+          });
+        } else if (data['farms'] != null) {
+          setState(() {
+            _listedFarms = (data['farms'] as List)
+                .map((farm) => farm['name'].toString())
+                .toList();
+            _isLoadingFarms = false;
+          });
+        }
+      } else {
+        setState(() {
+          _error = 'Failed to load farms. Please try again.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'An error occurred: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoadingFarms = false;
+      });
+    }
   }
 
   void _toggleEdit() {
@@ -98,7 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             // Email (Non-editable)
             TextField(
-              controller: TextEditingController(text: _email),
+              controller: TextEditingController(text: widget.email),
               enabled: false,
               decoration: InputDecoration(
                 labelText: "Email",
@@ -109,21 +156,36 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             SizedBox(height: 20),
 
-            // Listed Farms (Non-editable)
-            TextField(
-              controller: TextEditingController(
-                  text: _listedFarms.join(", ")), // Join farm list into a string
-              enabled: false,
-              decoration: InputDecoration(
-                labelText: "Listed Farms",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+            // Listed Farms (Fetched from API)
+            if (_isLoadingFarms)
+              CircularProgressIndicator()
+            else if (_error.isNotEmpty)
+              Text(
+                _error,
+                style: TextStyle(color: Colors.red),
+              )
+            else
+              TextField(
+                controller: TextEditingController(
+                  text: _listedFarms.join(", "),
+                ), // Join farm list into a string
+                enabled: false,
+                decoration: InputDecoration(
+                  labelText: "Listed Farms",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
   }
 }

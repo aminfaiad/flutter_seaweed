@@ -33,12 +33,14 @@ class _LoginPageState extends State<LoginPage> {
       // Navigate directly to the dashboard if the user is already logged in
       String username = prefs.getString('username') ?? 'User';
       String mobileToken = prefs.getString('mobile_token') ?? '';
+      String email = prefs.getString('email') ?? '';
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => FarmDashboardPage(
             username: username,
             mobile_token: mobileToken,
+            email: email,
           ),
         ),
       );
@@ -78,6 +80,7 @@ class _LoginPageState extends State<LoginPage> {
           await prefs.setBool('isLoggedIn', true);
           await prefs.setString('username', responseData['name']);
           await prefs.setString('mobile_token', responseData['mobile_token']);
+          await prefs.setString('email', responseData['email']);
 
           // Navigate to the dashboard
           Navigator.pushReplacement(
@@ -86,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
               builder: (context) => FarmDashboardPage(
                 username: responseData['name'],
                 mobile_token: responseData['mobile_token'],
+                email: responseData['email'],
               ),
             ),
           );
