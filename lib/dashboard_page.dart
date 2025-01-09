@@ -160,11 +160,8 @@ class _DashboardPageState extends State<DashboardPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => FarmDashboardPage(username: 'user', mobile_token: 'test',)),
-              (route) => false,
-            );
+              Navigator.pop(context);
+
           },
         ),
       ),

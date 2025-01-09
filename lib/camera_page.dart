@@ -105,13 +105,7 @@ class _CameraPageState extends State<CameraPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    DashboardPage(username: widget.username, mobile_token: widget.mobile_token),
-              ),
-            );
+            Navigator.pop(context);
           },
         ),
       ),

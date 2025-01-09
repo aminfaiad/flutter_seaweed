@@ -47,13 +47,13 @@ class _LoginPageState extends State<LoginPage> {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
         if (responseData['status'] == 'success') {
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  FarmDashboardPage(username: responseData['name'],
-                  mobile_token: responseData['mobile_token']), // Use returned username
-                  
+              builder: (context) => FarmDashboardPage(
+                username: responseData['name'],
+                mobile_token: responseData['mobile_token'], // Use returned username
+              ),
             ),
           );
         } else {

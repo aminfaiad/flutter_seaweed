@@ -65,12 +65,7 @@ class _TemperaturePageState extends State<WaterLevelPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DashboardPage(username: 'User' , mobile_token: "test",), // Replace 'User' with actual username
-              ),
-            );
+            Navigator.pop(context);
           },
         ),
         title: Text(

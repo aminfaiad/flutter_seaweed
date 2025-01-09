@@ -50,3 +50,5 @@ linux/
 windows/
 web/
 *.lock
+!custom_icon.png
+!default.png

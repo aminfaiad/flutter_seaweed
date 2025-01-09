@@ -5,7 +5,7 @@ class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[400],
+      backgroundColor: const Color.fromARGB(255, 160, 199, 173),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -13,18 +13,6 @@ class SignUpPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Align(
-                  alignment: Alignment.center,
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/scooter_image.png', // Replace with the path to your image
-                        height: 150,
-                      ),
-                      SizedBox(height: 20),
-                    ],
-                  ),
-                ),
                 Text(
                   'Sign up',
                   style: TextStyle(
@@ -77,13 +65,14 @@ class SignUpPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 15),
-                // Contact Number TextField
+                // Confirm Password TextField
                 TextField(
+                  obscureText: true,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    hintText: 'Contact number',
-                    prefixIcon: Icon(Icons.phone, color: Colors.green),
+                    hintText: 'Confirm Password',
+                    prefixIcon: Icon(Icons.lock, color: Colors.green),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
