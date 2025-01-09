@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_page.dart';
 import 'profile_page.dart';
 import 'changepw_page.dart';
 import 'login_page.dart';
 
-
 class FarmDashboardPage extends StatefulWidget {
   final String username;
   final String mobile_token;
-  FarmDashboardPage({required this.username,required this.mobile_token
-   
-  });
-  
+
+  FarmDashboardPage({required this.username, required this.mobile_token});
+
   @override
   _FarmDashboardPageState createState() => _FarmDashboardPageState();
 }
@@ -35,28 +34,35 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
     }
   }
 
-  
-  void _goToFarmDashboard() {
-  if (selectedFarm != null) {
-    // Navigate to the farm-specific dashboard
-    Navigator.push(
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clear session data
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => DashboardPage(
-          username: 'YourUsername', // Replace with the actual username value
-          mobile_token: 'YourMobileToken', // Replace with the actual token value
-        ),
-      ),
-    );
-  } else {
-    // Handle the case where no farm is selected
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Please select a farm to proceed.'),
-      ),
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (route) => false,
     );
   }
-}
+
+  void _goToFarmDashboard() {
+    if (selectedFarm != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DashboardPage(
+            username: widget.username,
+            mobile_token: widget.mobile_token,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select a farm to proceed.'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,9 +160,9 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-       actions: [
+        actions: [
           PopupMenuButton(
-            icon: Icon(Icons.more_vert, color: const Color.fromARGB(255, 0, 0, 0)),
+            icon: Icon(Icons.more_vert, color: Colors.black),
             itemBuilder: (context) => [
               PopupMenuItem(
                 child: Text("Profile"),
@@ -175,7 +181,11 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
               if (value == 'profile') {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                  MaterialPageRoute(
+                    builder: (context) => ProfilePage(
+                     
+                    ),
+                  ),
                 );
               } else if (value == 'change_password') {
                 Navigator.push(
@@ -183,11 +193,7 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
                   MaterialPageRoute(builder: (context) => ChangePasswordPage(mobileToken: widget.mobile_token)),
                 );
               } else if (value == 'logout') {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                  (route) => false,
-                );
+                _logout();
               }
             },
           ),

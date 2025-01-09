@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'signup_page.dart';
 import 'dashboard_page.dart';
@@ -18,6 +19,31 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginState(); // Check if the user is already logged in
+  }
+
+  Future<void> _checkLoginState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    if (isLoggedIn) {
+      // Navigate directly to the dashboard if the user is already logged in
+      String username = prefs.getString('username') ?? 'User';
+      String mobileToken = prefs.getString('mobile_token') ?? '';
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FarmDashboardPage(
+            username: username,
+            mobile_token: mobileToken,
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _login() async {
     final String email = _emailController.text.trim();
     final String password = _passwordController.text.trim();
@@ -32,9 +58,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      // Replace with your actual PHP API endpoint
       final Uri url = Uri.parse("https://smartseaweed.site/Real/login_mobile.php");
-
       final response = await http.post(
         url,
         body: {
@@ -47,12 +71,19 @@ class _LoginPageState extends State<LoginPage> {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
         if (responseData['status'] == 'success') {
+          // Save login state in SharedPreferences
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isLoggedIn', true);
+          await prefs.setString('username', responseData['name']);
+          await prefs.setString('mobile_token', responseData['mobile_token']);
+
+          // Navigate to the dashboard
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => FarmDashboardPage(
                 username: responseData['name'],
-                mobile_token: responseData['mobile_token'], // Use returned username
+                mobile_token: responseData['mobile_token'],
               ),
             ),
           );
