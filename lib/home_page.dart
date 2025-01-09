@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_page.dart';
 import 'profile_page.dart';
@@ -16,21 +18,94 @@ class FarmDashboardPage extends StatefulWidget {
 }
 
 class _FarmDashboardPageState extends State<FarmDashboardPage> {
-  List<String> farms = ['Farm1'];
+  List<Map<String, dynamic>> farms = [];
   String? selectedFarm;
 
-  void _addFarm() {
-    setState(() {
-      farms.add('Farm${farms.length + 1}');
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchFarms();
   }
 
-  void _deleteFarm() {
-    if (selectedFarm != null) {
-      setState(() {
-        farms.remove(selectedFarm);
-        selectedFarm = null;
+  Future<void> _fetchFarms() async {
+    final url = 'https://smartseaweed.site/Real/get_farm_mobile.php';
+    try {
+      final response = await http.post(Uri.parse(url), body: {
+        'mobile_token': widget.mobile_token,
       });
+      final data = json.decode(response.body);
+
+      if (data['error'] == null && data['farms'] != null) {
+        setState(() {
+          farms = List<Map<String, dynamic>>.from(data['farms']);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['error'] ?? 'Failed to fetch farms')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _addFarm() async {
+    final url = 'https://smartseaweed.site/Real/add_farm_mobile.php';
+    try {
+      final response = await http.post(Uri.parse(url), body: {
+        'mobile_token': widget.mobile_token,
+      });
+      final data = json.decode(response.body);
+
+      if (data['status'] == 'success') {
+        _fetchFarms(); // Refresh farm list
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Farm added successfully')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Failed to add farm')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteFarm(String farmToken) async {
+    final url = 'https://smartseaweed.site/Real/del_farm_mobile.php';
+    try {
+      final response = await http.post(Uri.parse(url), body: {
+        'mobile_token': widget.mobile_token,
+        'farm_token': farmToken,
+      });
+      final data = json.decode(response.body);
+
+      if (data['status'] == 'success') {
+        setState(() {
+          // Clear the selected farm if it was deleted
+          if (selectedFarm == farmToken) {
+            selectedFarm = null;
+          }
+        });
+
+        _fetchFarms(); // Refresh farm list
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Farm deleted successfully')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Failed to delete farm')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
@@ -77,7 +152,9 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
               children: [
                 IconButton(
                   icon: Icon(Icons.delete, color: Colors.white),
-                  onPressed: _deleteFarm,
+                  onPressed: selectedFarm != null
+                      ? () => _deleteFarm(selectedFarm!)
+                      : null,
                 ),
                 Expanded(
                   child: ListView.builder(
@@ -86,19 +163,19 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
                       final farm = farms[index];
                       return ListTile(
                         title: Text(
-                          farm,
+                          farm['name'] ?? 'Unknown Farm',
                           style: TextStyle(
-                            color: selectedFarm == farm
+                            color: selectedFarm == farm['farm_token']
                                 ? Colors.black
                                 : Colors.white,
                           ),
                         ),
-                        tileColor: selectedFarm == farm
+                        tileColor: selectedFarm == farm['farm_token']
                             ? Colors.white
                             : Colors.green,
                         onTap: () {
                           setState(() {
-                            selectedFarm = farm;
+                            selectedFarm = farm['farm_token'];
                           });
                         },
                       );
@@ -127,14 +204,18 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            selectedFarm!,
+                            farms.firstWhere(
+                                  (farm) => farm['farm_token'] == selectedFarm,
+                                  orElse: () => {'name': 'Unknown Farm'},
+                                )['name'] ??
+                                'Unknown Farm',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           SizedBox(height: 10),
-                          Text('Token: XYZ12345'), // Replace with actual token
+                          Text('Token: $selectedFarm'),
                           SizedBox(height: 20),
                           Text(
                             'Use this token to connect your Raspberry Pi.',
@@ -182,15 +263,15 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProfilePage(
-                     
-                    ),
+                    builder: (context) => ProfilePage(),
                   ),
                 );
               } else if (value == 'change_password') {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ChangePasswordPage(mobileToken: widget.mobile_token)),
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ChangePasswordPage(mobileToken: widget.mobile_token)),
                 );
               } else if (value == 'logout') {
                 _logout();
