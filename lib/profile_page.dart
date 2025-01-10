@@ -75,6 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
     // Save the updated username to backend
     final String updatedUsername = _usernameController.text;
     final String mobileToken = widget.mobile_token;
+    print(updatedUsername);
 
     try {
       final response = await http.post(
@@ -128,7 +129,7 @@ class _ProfilePageState extends State<ProfilePage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context, _usernameController.text);
           },
         ),
         actions: [

@@ -9,7 +9,7 @@ import 'changepw_page.dart';
 import 'login_page.dart';
 
 class FarmDashboardPage extends StatefulWidget {
-  final String username;
+  String username;
   final String mobile_token;
   final String email;
 
@@ -309,7 +309,9 @@ class _FarmDashboardPageState extends State<FarmDashboardPage> {
                   MaterialPageRoute(
                     builder: (context) => ProfilePage(username:widget.username, email:widget.email , mobile_token:widget.mobile_token),
                   ),
-                );
+                ).then((updatedUsername){
+                  widget.username = updatedUsername;
+                });
               } else if (value == 'change_password') {
                 Navigator.push(
                   context,
