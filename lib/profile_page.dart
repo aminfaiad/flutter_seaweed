@@ -66,16 +66,53 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _toggleEdit() {
-    setState(() {
-      _isEditing = !_isEditing;
+  void _toggleEdit() async {
+  setState(() {
+    _isEditing = !_isEditing;
+  });
 
-      if (!_isEditing) {
-        // Save the updated username to backend or database
-        print("Updated username: ${_usernameController.text}");
+  if (!_isEditing) {
+    // Save the updated username to backend
+    final String updatedUsername = _usernameController.text;
+    final String mobileToken = widget.mobile_token;
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://smartseaweed.site/Real/change_username_mobile.php'),
+        body: {
+          'mobile_token': mobileToken,
+          'username': updatedUsername,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['status'] == 'success') {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Username updated successfully!")),
+          );
+        } else {
+          // Show error message from the server
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? "Failed to update username.")),
+          );
+        }
+      } else {
+        // Handle server error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: Unable to connect to the server.")),
+        );
       }
-    });
+    } catch (e) {
+      // Handle request error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
   }
+}
 
   @override
   Widget build(BuildContext context) {

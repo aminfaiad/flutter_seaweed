@@ -1,27 +1,24 @@
 import 'dart:async'; // For Timer
+import 'dart:ffi';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'login_page.dart';
-import 'profile_page.dart';
-import 'changepw_page.dart';
 import 'salinity_page.dart';
-import 'home_page.dart';
 import 'ph_page.dart';
 import 'light_page.dart';
 import 'temperature_page.dart';
-import 'water_level_page.dart';
 import 'camera_page.dart';
-
+import 'main.dart';
+double current_water_level=0.0;
 class DashboardPage extends StatefulWidget {
   final String username;
   final String mobile_token;
   final String farm_token;
 
-  DashboardPage({required this.username, required this.mobile_token , required this.farm_token});
+  DashboardPage(
+      {required this.username, required this.mobile_token, required this.farm_token});
 
   @override
   _DashboardPageState createState() => _DashboardPageState();
@@ -32,6 +29,7 @@ class _DashboardPageState extends State<DashboardPage> {
   String phValue = 'Loading...';
   String lightIntensity = 'Loading...';
   String temperature = 'Loading...';
+  String water_level = 'Loading...';
 
   Timer? _timer;
 
@@ -129,6 +127,9 @@ class _DashboardPageState extends State<DashboardPage> {
             phValue = '${data['ph_value']} pH';
             lightIntensity = '${data['light_intensity']} lux';
             temperature = '${data['temperature']}°C';
+            water_level = '${data['water_level']}cm';
+            current_water_level = double.tryParse(data['water_level'])?? 0.0;
+            //print(current_water_level);
           });
         } else {
           setState(() {
@@ -136,6 +137,7 @@ class _DashboardPageState extends State<DashboardPage> {
             phValue = 'No Data';
             lightIntensity = 'No Data';
             temperature = 'No Data';
+            water_level = 'No Data';
           });
         }
       } else {
@@ -147,6 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
         phValue = 'Error';
         lightIntensity = 'Error';
         temperature = 'Error';
+        water_level = "Error";
       });
     }
   }
@@ -161,8 +164,7 @@ class _DashboardPageState extends State<DashboardPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-              Navigator.pop(context);
-
+            Navigator.pop(context);
           },
         ),
       ),
@@ -190,22 +192,22 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  _buildDashboardBox(
-                      context, 'Salinity', salinity, Colors.blue, SalinityPage(farm_token: widget.farm_token, type:"salinity")),
-                  _buildDashboardBox(
-                      context, 'pH', phValue, Colors.green, PhPage(farm_token: widget.farm_token, type:"ph_value")),
+                  _buildDashboardBox(context, 'Salinity', salinity,
+                      Colors.blue, SalinityPage(farm_token: widget.farm_token, type: "salinity")),
+                  _buildDashboardBox(context, 'pH', phValue, Colors.green,
+                      PhPage(farm_token: widget.farm_token, type: "ph_value")),
                   _buildDashboardBox(context, 'Light', lightIntensity,
-                      Colors.yellow, LightPage(farm_token: widget.farm_token, type:"light_intensity")),
+                      Colors.yellow, LightPage(farm_token: widget.farm_token, type: "light_intensity")),
                   _buildDashboardBox(context, 'Temperature', temperature,
-                      Colors.red, TemperaturePage(farm_token: widget.farm_token, type:"temperature")),
-                  _buildDashboardBox(context, 'Water Level', '50 cm',
-                      Colors.cyan, WaterLevelPage(farm_token: widget.farm_token, type:"water_level")),
+                      Colors.red, TemperaturePage(farm_token: widget.farm_token, type: "temperature")),
+                  _buildDashboardBox(
+                      context, 'Water Level', water_level, Colors.cyan, null),
                   _buildDashboardBox(
                       context,
                       'Cameras',
                       'Active',
                       Colors.orange,
-                      CameraPage( farm_token: widget.farm_token)),
+                      CameraPage(farm_token: widget.farm_token)),
                 ],
               ),
             ),
@@ -216,15 +218,19 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildDashboardBox(
-      BuildContext context, String title, String value, Color color, Widget page) {
+      BuildContext context, String title, String value, Color color, Widget? page) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => page,
-          ),
-        );
+        if (title == "Water Level" && double.tryParse(value.substring(0, value.length - 2)) != null) {
+          _showWaterLevelDialog(context);
+        } else if (page != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => page,
+            ),
+          );
+        }
       },
       child: Container(
         decoration: BoxDecoration(
@@ -249,4 +255,174 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
+  void _showWaterLevelDialog(BuildContext context) {
+  final TextEditingController waterLevelController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          'Calibrate Water Level',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Enter your current water level:',
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: waterLevelController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Enter value in cm',
+                hintStyle: TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+          TextButton(
+  onPressed: () async {
+    String enteredValue = waterLevelController.text.trim();
+
+    // Input validation: Check if the input is a valid number
+    if (enteredValue.isEmpty || double.tryParse(enteredValue) == null) {
+      // Show an error popup if validation fails
+      _showErrorDialog(context, 'Invalid Input',
+          'Please enter a valid numeric value for the water level.');
+    } else {
+      // Prepare the API call
+      final url = Uri.parse('https://smartseaweed.site/Real/update_water_level.php');
+      final requestData = {
+        'farm_token': widget.farm_token, // Assuming widget.farmToken is available
+        'current_water_level': current_water_level,
+        'new_water_level': double.parse(enteredValue),
+      };
+
+      try {
+        // Make the POST request
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(requestData),
+        );
+
+        // Parse the response
+        if (response.statusCode == 200) {
+          final responseData = json.decode(response.body);
+
+          if (responseData['status'] == 'success') {
+            // Show a success message
+            _showSuccessDialog(context, 'Success', responseData['message']);
+
+          } else {
+            // Show an error message from the API
+            _showErrorDialog(context, 'Error', responseData['message']);
+          }
+        } else {
+          // Handle non-200 status code
+          _showErrorDialog(context, 'Error', 'Failed to update water level. Please try again later.');
+        }
+      } catch (e) {
+        // Handle exceptions during the API call
+        _showErrorDialog(context, 'Error', 'An error occurred: $e');
+      }
+    }
+  },
+  child: Text(
+    'Confirm',
+    style: TextStyle(color: Colors.green),
+  ),
+)
+,
+        ],
+      );
+    },
+  );
+}
+
+void _showSuccessDialog(BuildContext context, String title, String message) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.green),
+        ),
+        content: Text(
+          message,
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close success dialog
+              Navigator.pop(context); // Close the main dialog
+            },
+            child: Text(
+              'OK',
+              style: TextStyle(color: Colors.green),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showErrorDialog(BuildContext context, String title, String message) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.red),
+        ),
+        content: Text(
+          message,
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close error dialog
+            },
+            child: Text(
+              'OK',
+              style: TextStyle(color: Colors.green),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 }
