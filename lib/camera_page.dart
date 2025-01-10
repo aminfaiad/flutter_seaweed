@@ -8,13 +8,13 @@ class CameraPage extends StatefulWidget {
 
   CameraPage({required this.farm_token});
 
-
   @override
   _CameraPageState createState() => _CameraPageState();
 }
 
 class _CameraPageState extends State<CameraPage> {
   String? _imageUrl;
+  String? _aiInsight;
   Timer? _imageTimer;
   Widget? _currentImageWidget;
   String? _errorMessage;
@@ -56,14 +56,14 @@ class _CameraPageState extends State<CameraPage> {
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['status'] == 'success') {
           final newImageUrl = 'https://smartseaweed.site/Real/' + jsonResponse['image_path'];
+          final aiInsight = jsonResponse['ai_insight'];
 
-          if (newImageUrl != _imageUrl) {
-            setState(() {
-              _imageUrl = newImageUrl;
-              _currentImageWidget = _buildZoomableImage(_imageUrl!);
-              _errorMessage = null;
-            });
-          }
+          setState(() {
+            _imageUrl = newImageUrl;
+            _aiInsight = aiInsight;
+            _currentImageWidget = _buildZoomableImage(_imageUrl!);
+            _errorMessage = null;
+          });
         } else {
           throw Exception(jsonResponse['message'] ?? 'Unknown error');
         }
@@ -114,14 +114,29 @@ class _CameraPageState extends State<CameraPage> {
     if (_errorMessage != null) {
       return Center(
         child: Text(
-          _errorMessage!,
+          "No Image Available",
           style: TextStyle(color: Colors.red),
         ),
       );
     }
 
     return Center(
-      child: _currentImageWidget ?? CircularProgressIndicator(),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (_currentImageWidget != null)
+            _currentImageWidget!
+          else
+            CircularProgressIndicator(),
+          SizedBox(height: 20),
+          Text(
+            _aiInsight != null
+                ? "AI Insight: $_aiInsight"
+                : "No AI insight available yet.",
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 }
